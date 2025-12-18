@@ -1,0 +1,23 @@
+#sidebar {
+  width: 250px;
+  z-index: 1050; /* Cao hơn nội dung chính */
+  transition: margin-left 0.3s ease; /* Hiệu ứng chuyển động */
+  margin-left: -250px;
+}
+
+#main-content-wrapper {
+  margin-left: 0;
+  padding-top: 60px;
+  transition: margin-left 0.3s ease;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#wrapper.sidebar-open #sidebar {
+  margin-left: 0;
+}
+
+#main-content {
+  flex-grow: 1;
+}

@@ -1,0 +1,55 @@
+<% /* ================= IMAGE UPLOADER ================= */ function
+renderImageUploader({ label, name, value = '', pageIndex, id, uploadFn }) {
+return `
+<div class="form-group mb-3">
+  <label class="form-label">${label}</label>
+
+  <input
+    type="file"
+    id="${id}-input-${pageIndex}"
+    hidden
+    accept="image/*"
+    onchange="${uploadFn}('${pageIndex}', '${id}')"
+  />
+
+  <input
+    type="text"
+    class="form-control mb-2"
+    id="${id}-text-${pageIndex}"
+    name="${name}"
+    value="${value}"
+    placeholder="Image URL or uploaded file"
+  />
+
+  <button
+    type="button"
+    class="btn btn-outline-primary w-100 mb-2"
+    onclick="document.getElementById('${id}-input-${pageIndex}').click()"
+  >
+    <i class="bi bi-upload"></i> Upload Image
+  </button>
+
+  <div class="border rounded p-2 bg-light text-center">
+    ${ value ? `<img
+      src="${value}"
+      class="img-fluid"
+      style="max-height: 180px"
+    />` : `<span class="text-muted small">No image</span>` }
+  </div>
+</div>
+`; } /* ================= REPEATER CARD ================= */ function
+renderRepeaterCard({ title, index, body, type }) { return `
+<div class="card mb-3 ${type}-item" data-index="${index}">
+  <div class="card-body">
+    <h5 class="card-title">${title} #${index + 1}</h5>
+    ${body}
+    <button
+      type="button"
+      class="btn btn-sm btn-outline-danger mt-2 remove-item"
+      data-type="${type}"
+    >
+      <i class="bi bi-trash"></i> Remove
+    </button>
+  </div>
+</div>
+`; } %>

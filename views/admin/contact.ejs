@@ -1,0 +1,289 @@
+<% function renderOfficeItem(office, index) { return `
+<div class="office-item mb-2 shadow-none">
+  <div class="input-group align-items-center bg-light rounded p-1">
+    <span class="input-group-text bg-transparent border-0"
+      ><i class="bi bi-building text-primary"></i
+    ></span>
+    <input
+      type="text"
+      class="form-control border-0 bg-transparent"
+      name="additionalOffices[${index}].name"
+      placeholder="Office Name"
+      value="${office.name || ''}"
+      required
+    />
+
+    <span class="text-muted opacity-50 px-1">|</span>
+
+    <span class="input-group-text bg-transparent border-0"
+      ><i class="bi bi-geo-alt text-danger"></i
+    ></span>
+    <input
+      type="text"
+      class="form-control border-0 bg-transparent"
+      name="additionalOffices[${index}].address"
+      placeholder="Address"
+      value="${office.address || ''}"
+      required
+    />
+
+    <span class="text-muted opacity-50 px-1">|</span>
+
+    <span class="input-group-text bg-transparent border-0"
+      ><i class="bi bi-telephone text-success"></i
+    ></span>
+    <input
+      type="text"
+      class="form-control border-0 bg-transparent"
+      name="additionalOffices[${index}].phone"
+      placeholder="Phone"
+      value="${office.phone || ''}"
+    />
+
+    <span class="text-muted opacity-50 px-1">|</span>
+
+    <span class="input-group-text bg-transparent border-0"
+      ><i class="bi bi-envelope text-info"></i
+    ></span>
+    <input
+      type="email"
+      class="form-control border-0 bg-transparent"
+      name="additionalOffices[${index}].email"
+      placeholder="Email"
+      value="${office.email || ''}"
+    />
+
+    <button
+      type="button"
+      class="btn btn-link text-danger remove-item"
+      onclick="this.closest('.office-item').remove()"
+    >
+      <i class="bi bi-trash"></i>
+    </button>
+  </div>
+</div>
+`; } %>
+
+<div class="admin-contact-management p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-telephone-fill"></i> Contact & Settings Management</h2>
+    <button type="submit" form="contactForm" class="btn btn-success btn-lg">
+      <i class="bi bi-save"></i> Save Changes
+    </button>
+  </div>
+
+  <form id="contactForm" onsubmit="submitContactForm(event)">
+    <ul class="nav nav-tabs" id="contactTabs" role="tablist">
+      <li class="nav-item">
+        <button
+          class="nav-link active"
+          data-bs-toggle="tab"
+          data-bs-target="#campus-tab"
+          type="button"
+        >
+          Campus & Offices
+        </button>
+      </li>
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          data-bs-toggle="tab"
+          data-bs-target="#social-tab"
+          type="button"
+        >
+          Social Media
+        </button>
+      </li>
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          data-bs-toggle="tab"
+          data-bs-target="#form-tab"
+          type="button"
+        >
+          Contact Form & Hours
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content border border-top-0 p-4 bg-white shadow-sm mb-4">
+      <div class="tab-pane fade show active" id="campus-tab">
+        <h4>Main Campus</h4>
+        <div class="row g-3 mb-4">
+          <div class="col-md-12">
+            <label class="form-label fw-bold">Address</label>
+            <input
+              type="text"
+              class="form-control"
+              name="mainCampus.address"
+              value="<%= contact.mainCampus.address %>"
+              required
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Phone</label>
+            <input
+              type="text"
+              class="form-control"
+              name="mainCampus.phone"
+              value="<%= contact.mainCampus.phone %>"
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Email</label>
+            <input
+              type="email"
+              class="form-control"
+              name="mainCampus.email"
+              value="<%= contact.mainCampus.email %>"
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Google Map URL</label>
+            <input
+              type="text"
+              class="form-control"
+              name="mainCampus.mapUrl"
+              value="<%= contact.mainCampus.mapUrl %>"
+            />
+          </div>
+        </div>
+
+        <hr />
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4>Additional Offices</h4>
+        </div>
+        <div id="officesContainer">
+          <% (contact.additionalOffices || []).forEach((office, index) => { %>
+          <%- renderOfficeItem(office, index) %> <% }) %>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-outline-primary btn-sm mt-2"
+          onclick="addOffice()"
+        >
+          <i class="bi bi-plus-circle"></i> Add Office
+        </button>
+      </div>
+
+      <div class="tab-pane fade" id="social-tab">
+        <h4>Social Media Links</h4>
+        <div class="row g-3">
+          <% ['facebook', 'twitter', 'linkedin', 'instagram',
+          'youtube'].forEach(platform => { %>
+          <div class="col-md-6">
+            <label class="form-label text-capitalize"
+              ><i class="bi bi-<%= platform %>"></i> <%= platform %></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              name="socialMediaLinks.<%= platform %>"
+              value="<%= contact.socialMediaLinks[platform] %>"
+            />
+          </div>
+          <% }) %>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="form-tab">
+        <div class="row">
+          <div class="col-md-7 border-end">
+            <h4>Contact Form Settings</h4>
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox"
+              name="contactFormSettings.enabled" <%=
+              contact.contactFormSettings.enabled ? 'checked' : '' %>>
+              <label class="form-check-label">Enable Contact Form</label>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Recipient Email (Notifications)</label>
+              <input
+                type="email"
+                class="form-control"
+                name="contactFormSettings.recipientEmail"
+                value="<%= contact.contactFormSettings.recipientEmail %>"
+              />
+            </div>
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox"
+              name="contactFormSettings.autoReplyEnabled" <%=
+              contact.contactFormSettings.autoReplyEnabled ? 'checked' : '' %>>
+              <label class="form-check-label">Enable Auto-Reply</label>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Auto-Reply Message</label>
+              <textarea
+                class="form-control"
+                name="contactFormSettings.autoReplyMessage"
+                rows="4"
+              >
+<%= contact.contactFormSettings.autoReplyMessage %></textarea
+              >
+            </div>
+          </div>
+          <div class="col-md-5 ps-4">
+            <h4>Business Hours</h4>
+            <div class="mb-3">
+              <label class="form-label">Weekdays</label>
+              <input
+                type="text"
+                class="form-control"
+                name="businessHours.weekdays"
+                placeholder="e.g. 8:00 AM - 5:00 PM"
+                value="<%= contact.businessHours.weekdays %>"
+              />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Weekends</label>
+              <input
+                type="text"
+                class="form-control"
+                name="businessHours.weekends"
+                placeholder="e.g. Closed"
+                value="<%= contact.businessHours.weekends %>"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+  function addOffice() {
+    const container = document.getElementById("officesContainer");
+    const index = container.querySelectorAll(".office-item").length;
+
+    const html = `
+    <div class="office-item mb-2 shadow-none">
+        <div class="input-group align-items-center bg-light rounded p-1">
+            <span class="input-group-text bg-transparent border-0"><i class="bi bi-building text-primary"></i></span>
+            <input type="text" class="form-control border-0 bg-transparent" name="additionalOffices[${index}].name" placeholder="Office Name" required>
+            
+            <span class="text-muted opacity-50 px-1">|</span>
+
+            <span class="input-group-text bg-transparent border-0"><i class="bi bi-geo-alt text-danger"></i></span>
+            <input type="text" class="form-control border-0 bg-transparent" name="additionalOffices[${index}].address" placeholder="Address" required>
+
+            <span class="text-muted opacity-50 px-1">|</span>
+
+            <span class="input-group-text bg-transparent border-0"><i class="bi bi-telephone text-success"></i></span>
+            <input type="text" class="form-control border-0 bg-transparent" name="additionalOffices[${index}].phone" placeholder="Phone">
+
+            <span class="text-muted opacity-50 px-1">|</span>
+
+            <span class="input-group-text bg-transparent border-0"><i class="bi bi-envelope text-info"></i></span>
+            <input type="email" class="form-control border-0 bg-transparent" name="additionalOffices[${index}].email" placeholder="Email">
+
+            <button type="button" class="btn btn-link text-danger remove-item" onclick="this.closest('.office-item').remove()">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>`;
+
+    container.insertAdjacentHTML("beforeend", html);
+  }
+</script>

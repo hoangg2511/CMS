@@ -1,0 +1,187 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3><%= pageTitle %></h3>
+
+  <div>
+    <a href="/admin/news" class="btn btn-secondary me-2">
+      <i class="bi bi-arrow-left"></i> Back
+    </a>
+
+ <button
+  class="btn btn-primary"
+  data-id="<%= news ? news._id : '' %>"
+  onclick="saveNews(this.dataset.id)">
+  <i class="bi bi-save"></i> Save
+</button>
+  </div>
+</div>
+
+
+<form id="newsForm">
+  <div class="row">
+    <div class="col-md-8">
+<div class="card mb-4">
+  <div class="card-header fw-bold">Basic Information</div>
+  <div class="card-body">
+
+    <div class="mb-3">
+      <label class="form-label">Title *</label>
+      <input
+        type="text"
+        class="form-control"
+        name="title"
+        value="<%= news && news.basicInfo ? news.basicInfo.title : '' %>"
+        required
+      />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Teaser *</label>
+      <textarea
+        class="form-control"
+        name="teaser"
+        maxlength="300"
+        required
+      ><%= news && news.basicInfo ? news.basicInfo.teaser : '' %></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Content *</label>
+      <textarea
+        class="form-control"
+        name="content"
+        rows="15"
+        required
+      ><%= news && news.basicInfo ? news.basicInfo.content : '' %></textarea>
+    </div>
+
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header fw-bold">SEO Settings</div>
+  <div class="card-body">
+
+    <div class="mb-3">
+      <label class="form-label">Meta Title</label>
+      <input
+        type="text"
+        class="form-control"
+        name="metaTitle"
+        value="<%= news && news.seo ? news.seo.metaTitle : '' %>"
+      />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Meta Description</label>
+      <textarea
+        class="form-control"
+        name="metaDescription"
+      ><%= news && news.seo ? news.seo.metaDescription : '' %></textarea>
+    </div>
+
+  </div>
+</div>
+
+    </div>
+    <div class="col-md-4">
+<div class="card mb-4">
+  <div class="card-header fw-bold">Featured Image</div>
+  <div class="card-body">
+
+  <input
+  type="file"
+  id="singleImageInput"
+  accept="image/*"
+  hidden
+  onchange="uploadFeatureImage()"
+/>
+
+
+<input
+  type="text"
+  class="form-control mb-2"
+  name="image"
+  id="imageInput"
+  value="<%= news?.basicInfo?.featuredImage || '' %>"
+  required
+/>
+
+<button
+  type="button"
+  class="btn btn-outline-primary w-100 mb-2"
+  onclick="document.getElementById('singleImageInput').click()"
+>
+  Upload Image
+</button>
+
+<img
+  id="imagePreview"
+  src="/uploads/<%= news?.basicInfo?.featuredImage || '' %>"
+  class="img-thumbnail"
+  style="width: 80px; height: 60px; object-fit: cover; display: block;"
+/>
+  </div>
+</div>
+
+
+
+<div class="card">
+  <div class="card-header fw-bold">Settings</div>
+  <div class="card-body">
+
+    <div class="mb-3">
+      <label class="form-label">Category</label>
+      <select class="form-select" name="category">
+        <% ['news','event','story','announcement'].forEach(function(c) { %>
+          <option
+            value="<%= c %>"
+            <%= news && news.categorization && news.categorization.category === c ? 'selected' : '' %>
+          >
+            <%= c %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Status</label>
+      <select class="form-select" name="status">
+        <% ['draft','published'].forEach(function(s) { %>
+          <option
+            value="<%= s %>"
+            <%= news && news.status === s ? 'selected' : '' %>
+          >
+            <%= s %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Publish Date</label>
+      <input
+        type="date"
+        class="form-control"
+        name="publishDate"
+        value="<%= news ? news.publishDate : '' %>"
+      />
+    </div>
+
+    <div class="form-check">
+      <input
+        class="form-check-input"
+        type="checkbox"
+        name="featured"
+        <%= news && news.featured ? 'checked' : '' %>
+      />
+      <label class="form-check-label">
+        Featured on Homepage
+      </label>
+    </div>
+
+  </div>
+</div>
+
+    </div>
+  </div>
+</form>

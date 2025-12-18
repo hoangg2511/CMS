@@ -1,0 +1,748 @@
+<% 
+// --- HÀM RENDER NHIỀU ẢNH ---
+function renderImagesUpload({
+  idPrefix,
+  name,
+  values = [],
+  pageIndex,
+  label = 'Images',
+  previewHeight = 120,
+  uploadHandler = 'uploadMultiImage' // Tên hàm xử lý nhiều ảnh
+}) {
+  const uid = `${idPrefix}-${pageIndex}`;
+ let imageList = [];
+  if (Array.isArray(values)) {
+      // Nếu mảng có phần tử chứa dấu phẩy, split nó ra và làm phẳng (flatten)
+      imageList = values.flatMap(v => typeof v === 'string' ? v.split(',') : v)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+  }
+
+  const valueString = imageList.join(', ');
+
+  // Render từng ảnh
+  const previewImages = imageList.map((img, i) => `
+   <div class="position-relative me-2 mb-2">
+  <img 
+    src="/uploads/${img}" 
+    class="img-thumbnail" 
+    style="width: 80px; height: 60px; object-fit: cover; display: block;" 
+    alt="Preview ${i + 1}" 
+  />
+</div>
+  `).join('');
+
+  return `
+  <div class="form-group mb-3 images-upload-block" data-uid="${uid}">
+    <label class="form-label">${label}</label>
+    <input
+      type="file"
+      id="${uid}-file"
+      accept="image/*"
+      multiple
+      hidden
+      onchange="uploadMultiImage({ 
+        fileInputId: '${uid}-file',
+        previewImageId: '${uid}-preview',
+        hiddenInputId: '${uid}-text',
+        multiple: true
+      })"
+    />
+    <input type="text" class="form-control mb-2" name="${name}" id="${uid}-text" value="${valueString}" />
+    <button type="button" class="btn btn-outline-primary w-100 mb-2" onclick="document.getElementById('${uid}-file').click()">
+      <i class="bi bi-upload"></i> Upload Images
+    </button>
+    <div id="${uid}-preview" class="d-flex flex-wrap border rounded p-2 bg-light">
+      ${previewImages || `<span class="text-muted small">No images selected</span>`}
+    </div>
+  </div>`;
+}
+
+// --- HÀM RENDER 1 ẢNH ---
+function renderImageUpload({
+  idPrefix,
+  name,
+  value = '',
+  pageIndex,
+  index = null,
+  label = 'Image',
+  previewHeight = 180,
+  uploadHandler = 'uploadSingleImage' // Tên hàm xử lý 1 ảnh
+}) {
+  const uid = index !== null ? `${idPrefix}-${pageIndex}-${index}` : `${idPrefix}-${pageIndex}`;
+
+  return `
+  <div class="form-group mb-3 image-upload-block" data-uid="${uid}">
+    <label class="form-label">${label}</label>
+    <input
+      type="file"
+      id="${uid}-file"
+      accept="image/*"
+      hidden
+      onchange="uploadSingleImage({ 
+        fileInputId: '${uid}-file',
+        previewImageId: '${uid}-preview',
+        hiddenInputId: '${uid}-text'
+      })"
+    />
+    <input type="text" class="form-control mb-2" name="${name}" id="${uid}-text" value="${value || ''}" />
+    <button type="button" class="btn btn-outline-primary w-100 mb-2" onclick="document.getElementById('${uid}-file').click()">
+      <i class="bi bi-upload"></i> Upload Image
+    </button>
+    <div class="border rounded p-2 text-center bg-light">
+      ${value 
+        ? `<img id="${uid}-preview" src="/uploads/${value}" class="img-thumbnail" style="width: 80px; height: 60px; object-fit: cover; display: block;">`
+        : `<span id="${uid}-preview" class="text-muted small">No image selected</span>`}
+    </div>
+  </div>`;
+}
+
+function renderFeatureItem(feature, index) {
+    return `
+        <div class="card mb-3 feature-item" data-index="${index}">
+            <div class="card-body">
+                <h5 class="card-title text-primary">Feature #${index + 1}</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label">Number/Icon</label>
+                        <input type="text" class="form-control" name="features[${index}].number" value="${feature.number || ''}" required>
+                    </div>
+                    <div class="col-md-8 mb-2">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-control" name="features[${index}].title" value="${feature.title || ''}" required>
+                    </div>
+                </div>
+                <div class="form-group mb-2">
+                    <label class="form-label">Content</label>
+                    <textarea class="form-control" name="features[${index}].content" rows="2" required>${feature.content || ''}</textarea>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-item" data-type="feature"><i class="bi bi-trash"></i> Remove</button>
+            </div>
+        </div>
+    `;
+}
+
+
+
+// 3. CategoryFeatureSchema (Cho Categories Section -> Features)
+
+
+// 4. ImagesSchema (Cho Variety Options Section -> Images)
+// Schema: { image: { type: String } }
+function renderVarietyImageItem(imageObject, index) {
+    const imageUrl = imageObject && imageObject.image ? imageObject.image : '';
+    
+    return `
+        <div class="card mb-3 variety-image-item" data-index="${index}">
+            <div class="card-body p-3">
+                <h6 class="card-subtitle mb-2 text-muted">Variety Image #${index + 1}</h6>
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-8">
+                        <label class="form-label">Image URL / Preview</label>
+                        <input type="file" class="d-none file-upload-input" data-index="${index}"> 
+                        <div class="input-group mb-2">
+                            <input 
+                                type="text" 
+                                class="form-control image-url-input" 
+                                name="varietyOptionsSection.images[${index}].image" 
+                                placeholder="Paste Image URL here or use Upload" 
+                                value="${imageUrl}" 
+                            >
+                        </div>
+                        <div class="image-preview-wrapper mt-2 border rounded p-1 text-center bg-light" style="max-height: 150px; overflow: hidden;">
+                            ${imageUrl ? `<img src="${imageUrl}" alt="Preview" class="img-fluid" style="max-height: 140px; object-fit: contain;">` : '<span class="text-muted small">No Image Preview</span>'}
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 d-flex flex-column align-items-stretch">
+                        <button type="button" class="btn btn-primary mb-2 w-100 upload-button" data-index="${index}">
+                            <i class="bi bi-cloud-arrow-up"></i> Upload New
+                        </button>
+                        <button type="button" class="btn btn-danger w-100 remove-item" data-type="varietyImage">
+                            <i class="bi bi-trash"></i> Remove
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 5. Array of Strings (Cho Categories Section -> Images)
+// Schema: images: [String]
+function renderStringImageItem(image, index) {
+    const imageUrl = image || '';
+    
+    return `
+        <div class="card mb-3 string-image-item" data-index="${index}">
+            <div class="card-body p-3">
+                <h6 class="card-subtitle mb-2 text-muted">Category Image #${index + 1}</h6>
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-8">
+                        <label class="form-label">Image URL / Preview</label>
+                        <input type="file" class="d-none file-upload-input" data-index="${index}"> 
+                        <div class="input-group mb-2">
+                            <input 
+                                type="text" 
+                                class="form-control image-url-input" 
+                                name="categoriesSection.images[${index}]" 
+                                placeholder="Paste Image URL here or use Upload" 
+                                value="${imageUrl}" 
+                            >
+                        </div>
+                        <div class="image-preview-wrapper mt-2 border rounded p-1 text-center bg-light" style="max-height: 150px; overflow: hidden;">
+                            ${imageUrl ? `<img src="${imageUrl}" alt="Preview" class="img-fluid" style="max-height: 140px; object-fit: contain;">` : '<span class="text-muted small">No Image Preview</span>'}
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 d-flex flex-column align-items-stretch">
+                        <button type="button" class="btn btn-primary mb-2 w-100 upload-button" data-index="${index}">
+                            <i class="bi bi-cloud-arrow-up"></i> Upload New
+                        </button>
+                        <button type="button" class="btn btn-danger w-100 remove-item" data-type="categoryImage">
+                            <i class="bi bi-trash"></i> Remove
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+%>
+
+<div class="container my-5">
+  
+    <% (aboutUsPages || []).forEach((currentAboutUs, pageIndex) => { %>
+   <form id="aboutUsForm-<%= pageIndex %>" action="/about/update" onsubmit="submitAboutUs('<%= pageIndex %>', event)">
+        <input type="hidden" name="_id" value="<%= currentAboutUs._id || '' %>">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">Page ID: <%= currentAboutUs._id || 'New Page' %></h2>
+                <div class="form-group mb-0 d-flex align-items-center">
+                    <label for="status-<%= pageIndex %>" class="me-3 fw-bold">Trạng thái:</label>
+                    <select class="form-select w-auto" name="status" id="status-<%= pageIndex %>" required>
+                        <option value="draft" <%= currentAboutUs.status === 'draft' ? 'selected' : '' %>>Draft</option>
+                        <option value="published" <%= currentAboutUs.status === 'published' ? 'selected' : '' %>>Published</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs" id="aboutUsTabs-<%= pageIndex %>" role="tablist">
+            <li class="nav-item"><button class="nav-link active" id="intro-tab-<%= pageIndex %>" data-bs-toggle="tab" data-bs-target="#intro-<%= pageIndex %>" type="button">Intro & Features</button></li>
+            <li class="nav-item"><button class="nav-link" id="quote-tab-<%= pageIndex %>" data-bs-toggle="tab" data-bs-target="#quote-<%= pageIndex %>" type="button">Quote Banner</button></li>
+            <li class="nav-item"><button class="nav-link" id="variety-tab-<%= pageIndex %>" data-bs-toggle="tab" data-bs-target="#variety-<%= pageIndex %>" type="button">Variety Options</button></li>
+            <li class="nav-item"><button class="nav-link" id="howitworks-tab-<%= pageIndex %>" data-bs-toggle="tab" data-bs-target="#howitworks-<%= pageIndex %>" type="button">How It Works</button></li>
+            <li class="nav-item"><button class="nav-link" id="categories-tab-<%= pageIndex %>" data-bs-toggle="tab" data-bs-target="#categories-<%= pageIndex %>" type="button">Categories</button></li>
+            <li class="nav-item"><button class="nav-link" id="subscribe-tab-<%= pageIndex %>" data-bs-toggle="tab" data-bs-target="#subscribe-<%= pageIndex %>" type="button">Subscribe</button></li>
+            <li class="nav-item"><button class="nav-link" id="seo-tab-<%= pageIndex %>" data-bs-toggle="tab" data-bs-target="#seo-<%= pageIndex %>" type="button">SEO</button></li>
+        </ul>
+
+        <div class="tab-content border border-top-0 p-4 bg-white shadow-sm mb-5" id="aboutUsTabContent-<%= pageIndex %>">
+
+            <div class="tab-pane fade show active" id="intro-<%= pageIndex %>" role="tabpanel" aria-labelledby="intro-tab-<%= pageIndex %>">
+                <h3>1. Introduction Section (Required)</h3>
+                <div class="form-group mb-3">
+                    <label for="introSection.label" class="form-label">Label (required)</label>
+                    <input type="text" class="form-control" name="introSection.label" value="<%= currentAboutUs.introSection?.label || '' %>" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="introSection.title" class="form-label">Main Title (required)</label>
+                    <input type="text" class="form-control" name="introSection.title" value="<%= currentAboutUs.introSection?.title || '' %>" required>
+                </div>
+                <div class="form-group mb-4">
+                    <label for="introSection.content" class="form-label">Content (required)</label>
+                    <textarea class="form-control" name="introSection.content" rows="4" required><%= currentAboutUs.introSection?.content || '' %></textarea>
+                </div>
+
+                <h4 class="mt-4">2. Features List (Repeater - FeatureSchema)</h4>
+                <div id="featuresContainer-<%= pageIndex %>"   data-max="3" data-type="feature">
+                   <% (currentAboutUs.features || []).forEach((feature, index) => { %>
+                        <div class="card mb-3 feature-item" data-index="<%= index %>">
+    <div class="card-body">
+      <h5 class="card-title text-primary">
+        Feature <%= index + 1 %>
+      </h5>
+
+      <div class="row">
+        <div class="col-md-4 mb-2">
+          <label class="form-label">Number / Icon</label>
+          <input
+            type="text"
+            class="form-control"
+            name="features[<%= index %>].number"
+            value="<%= feature.number || '' %>"
+            required
+          >
+        </div>
+
+        <div class="col-md-8 mb-2">
+          <label class="form-label">Title</label>
+          <input
+            type="text"
+            class="form-control"
+            name="features[<%= index %>].title"
+            value="<%= feature.title || '' %>"
+            required
+          >
+        </div>
+      </div>
+
+      <div class="form-group mb-2">
+        <label class="form-label">Content</label>
+        <textarea
+          class="form-control"
+          name="features[<%= index %>].content"
+          rows="2"
+          required
+        ><%= feature.content || '' %></textarea>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-danger mt-2 remove-item"
+        data-type="feature"
+      >
+        <i class="bi bi-trash"></i> Remove
+      </button>
+    </div>
+                        </div>
+                    <% }) %>    
+                </div>
+              <button type="button" class="btn btn-success btn-sm add-item-btn" data-container="featuresContainer-<%= pageIndex %>" onclick="addItem('feature', 'featuresContainer-<%= pageIndex %>', '<%= pageIndex %>')"><i class="bi bi-plus-circle"></i> Add Feature</button>
+
+            </div>
+
+            <div class="tab-pane fade" id="quote-<%= pageIndex %>" role="tabpanel" aria-labelledby="quote-tab-<%= pageIndex %>">
+                <h3>Quote Banner Section</h3>
+                <div class="form-group mb-3">
+                    <label for="quoteBanner.quoteText" class="form-label">Quote Text (required)</label>
+                    <textarea class="form-control" name="quoteBanner.quoteText" rows="3" required><%= currentAboutUs.quoteBanner?.quoteText || '' %></textarea>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="quoteBanner.author" class="form-label">Author (required)</label>
+                    <input type="text" class="form-control" name="quoteBanner.author" value="<%= currentAboutUs.quoteBanner?.author || '' %>" required>
+                </div>
+                <div class="form-group mb-3">
+                <%- renderImageUpload({
+                    idPrefix: 'quoteBanner',
+                    name: 'quoteBanner.backgroundImage',
+                    value: currentAboutUs.quoteBanner?.backgroundImage,
+                    pageIndex,
+                    label: 'Background Image'
+                }) %>
+                </div>
+
+            </div>
+
+            <div class="tab-pane fade" id="variety-<%= pageIndex %>" role="tabpanel" aria-labelledby="variety-tab-<%= pageIndex %>">
+                <h3>Variety Options Section</h3>
+                <div class="form-group mb-3">
+                    <label for="varietyOptionsSection.label" class="form-label">Label</label>
+                    <input type="text" class="form-control" name="varietyOptionsSection.label" value="<%= currentAboutUs.varietyOptionsSection?.label || '' %>">
+                </div>
+                <div class="form-group mb-3">
+                    <label for="varietyOptionsSection.title" class="form-label">Title</label>
+                    <input type="text" class="form-control" name="varietyOptionsSection.title" value="<%= currentAboutUs.varietyOptionsSection?.title || '' %>">
+                </div>
+                <div class="form-group mb-3">
+                    <label for="varietyOptionsSection.content" class="form-label">Content</label>
+                    <textarea class="form-control" name="varietyOptionsSection.content" rows="3"><%= currentAboutUs.varietyOptionsSection?.content || '' %></textarea>
+                </div>
+
+                <h4 class="mt-4">Images (Repeater - ImagesSchema)</h4>
+                <%- renderImagesUpload({
+                    idPrefix: 'varietyImages',
+                    name: 'varietyOptionsSection.images',
+                    values: (currentAboutUs.varietyOptionsSection?.images || []).map(i => i.image),
+                    pageIndex,
+                    label: 'Variety Images',
+                    previewHeight: 140
+                }) %>
+
+
+                <h4 class="mt-4">CTA Button (CTASchema)</h4>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="varietyOptionsSection.ctaButton.text" class="form-label">Button Text (required)</label>
+                        <input type="text" class="form-control" name="varietyOptionsSection.ctaButton.text" value="<%= currentAboutUs.varietyOptionsSection?.ctaButton?.text || '' %>" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="varietyOptionsSection.ctaButton.link" class="form-label">Button Link (required)</label>
+                        <input type="text" class="form-control" name="varietyOptionsSection.ctaButton.link" value="<%= currentAboutUs.varietyOptionsSection?.ctaButton?.link || '' %>" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="howitworks-<%= pageIndex %>" role="tabpanel" aria-labelledby="howitworks-tab-<%= pageIndex %>">
+                <h3>How It Works Section</h3>
+                <div class="form-group mb-3">
+                    <label for="howItWorksSection.label" class="form-label">Label</label>
+                    <input type="text" class="form-control" name="howItWorksSection.label" value="<%= currentAboutUs.howItWorksSection?.label || '' %>">
+                </div>
+                <div class="form-group mb-3">
+                    <label for="howItWorksSection.title" class="form-label">Title</label>
+                    <input type="text" class="form-control" name="howItWorksSection.title" value="<%= currentAboutUs.howItWorksSection?.title || '' %>">
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label">Image</label>
+
+                <%- renderImageUpload({
+                    idPrefix: 'howItWorks',
+                    name: 'howItWorksSection.image',
+                    value: currentAboutUs.howItWorksSection?.image,
+                    pageIndex,
+                    label: 'How It Works Image'
+                }) %>
+    <!-- preview -->
+    <!-- <div class="mt-2">
+        <label class="form-label small text-muted">Preview:</label>
+        <div class="border rounded p-2 text-center bg-light">
+            <% if (currentAboutUs.howItWorksSection?.image) { %>
+                <img
+                    id="howItWorksImagePreview-<%= pageIndex %>"
+                    src="<%= currentAboutUs.howItWorksSection.image %>"
+                    class="img-fluid rounded"
+                    style="max-height: 180px; object-fit: cover;"
+                    alt="How It Works Preview"
+                />
+            <% } else { %>
+                <span
+                    id="howItWorksImagePreview-<%= pageIndex %>"
+                    class="text-muted small"
+                >
+                    No image selected
+                </span>
+            <% } %>
+        </div>
+    </div> -->
+</div>
+
+
+                <h4 class="mt-4">Steps (Repeater - StepSchema)</h4>
+                <div id="stepsContainer-<%= pageIndex %>" data-max="3" data-type="step">
+                   <% (currentAboutUs.howItWorksSection?.steps || []).forEach((step, index) => { %>
+        <div class="card mb-3 step-item" data-index="<%= index %>">
+            <div class="card-body">
+                <h5 class="card-title text-info">Step #<%= index + 1 %></h5>
+                
+                <div class="form-group mb-2">
+                    <label class="form-label">Icon Class (e.g., bi-clock)</label>
+                    <input type="text" class="form-control" 
+                           name="howItWorksSection.steps[<%= index %>].icon" 
+                           value="<%= step.icon || '' %>">
+                </div>
+
+                <div class="form-group mb-2">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-control" 
+                           name="howItWorksSection.steps[<%= index %>].title" 
+                           value="<%= step.title || '' %>" required>
+                </div>
+
+                <div class="form-group mb-2">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" 
+                              name="howItWorksSection.steps[<%= index %>].description" 
+                              rows="2" required><%= step.description || '' %></textarea>
+                </div>
+
+                <button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-item" 
+                           data-type="step">
+                    <i class="bi bi-trash"></i> Remove
+                </button>
+            </div>
+        </div>
+    <% }) %>
+                </div>
+                <button type="button" class="btn btn-success btn-sm add-item-btn" data-container="stepsContainer-<%= pageIndex %>" onclick="addItem('step', 'stepsContainer-<%= pageIndex %>', '<%= pageIndex %>')"><i class="bi bi-plus-circle"></i> Add Step</button>
+            </div>
+
+            <div class="tab-pane fade" id="categories-<%= pageIndex %>" role="tabpanel" aria-labelledby="categories-tab-<%= pageIndex %>">
+                <h3>Categories Section</h3>
+                
+                <h4 class="mt-4">Features (Repeater - CategoryFeatureSchema)</h4>
+                <div id="categoryFeaturesContainer-<%= pageIndex %>" data-max="3" data-type="categoryFeature">
+                    <% (currentAboutUs.categoriesSection?.features || []).forEach((feature, index) => { %>
+    <div class="card mb-3 category-feature-item" data-index="<%= index %>">
+      <div class="card-body">
+        <h5 class="card-title text-secondary">
+          Category Feature #<%= index + 1 %>
+        </h5>
+
+        <div class="form-group mb-2">
+          <label class="form-label">Icon Class (e.g., bi-lightbulb)</label>
+          <input
+            type="text"
+            class="form-control"
+            name="categoriesSection.features[<%= index %>].icon"
+            value="<%= feature.icon || '' %>"
+          >
+        </div>
+
+        <div class="form-group mb-2">
+          <label class="form-label">Title</label>
+          <input
+            type="text"
+            class="form-control"
+            name="categoriesSection.features[<%= index %>].title"
+            value="<%= feature.title || '' %>"
+            required
+          >
+        </div>
+
+        <div class="form-group mb-2">
+          <label class="form-label">Description</label>
+          <textarea
+            class="form-control"
+            name="categoriesSection.features[<%= index %>].description"
+            rows="2"
+            required
+          ><%= feature.description || '' %></textarea>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-danger mt-2 remove-item"
+          data-type="categoryFeature"
+        >
+          <i class="bi bi-trash"></i> Remove
+        </button>
+      </div>
+    </div>
+  <% }) %>
+                </div>
+             <button type="button" class="btn btn-success btn-sm add-item-btn" data-container="categoryFeaturesContainer-<%= pageIndex %>" onclick="addItem('categoryFeature','categoryFeaturesContainer-<%= pageIndex %>','<%= pageIndex %>')">
+                <i class="bi bi-plus-circle"></i> Add Category Feature
+                </button>
+
+
+                <h4 class="mt-4">Images (Repeater - Array of Strings)</h4>
+                <%- renderImagesUpload({
+                    idPrefix: 'categoryImages',
+                    name: 'categoriesSection.images',
+                    values: currentAboutUs.categoriesSection?.images || [],
+                    pageIndex,
+                    label: 'Category Images',
+                    previewHeight: 140
+                }) %>
+            </div>
+
+            <div class="tab-pane fade" id="subscribe-<%= pageIndex %>" role="tabpanel" aria-labelledby="subscribe-tab-<%= pageIndex %>">
+                <h3>Subscribe Section</h3>
+                <div class="form-group mb-3">
+                    <label for="subscribeSection.title" class="form-label">Title</label>
+                    <input type="text" class="form-control" name="subscribeSection.title" value="<%= currentAboutUs.subscribeSection?.title || '' %>">
+                </div>
+                <div class="form-group mb-3">
+                    <label for="subscribeSection.description" class="form-label">Description</label>
+                    <textarea class="form-control" name="subscribeSection.description" rows="3"><%= currentAboutUs.subscribeSection?.description || '' %></textarea>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="seo-<%= pageIndex %>" role="tabpanel" aria-labelledby="seo-tab-<%= pageIndex %>">
+                <h3>SEO Meta Tags</h3>
+                <div class="form-group mb-3">
+                    <label for="seo.metaTitle" class="form-label">Meta Title</label>
+                    <input type="text" class="form-control" name="seo.metaTitle" value="<%= currentAboutUs.seo?.metaTitle || '' %>">
+                </div>
+                <div class="form-group mb-3">
+                    <label for="seo.metaDescription" class="form-label">Meta Description</label>
+                    <textarea class="form-control" name="seo.metaDescription" rows="3"><%= currentAboutUs.seo?.metaDescription || '' %></textarea>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="seo.metaKeywords" class="form-label">Meta Keywords</label>
+                    <input type="text" class="form-control" name="seo.metaKeywords" value="<%= currentAboutUs.seo?.metaKeywords || '' %>">
+                </div>
+                <div class="form-group mb-3">
+                    <label for="seo.ogImage" class="form-label">OG Image URL</label>
+                    <input type="text" class="form-control" name="seo.ogImage" value="<%= currentAboutUs.seo?.ogImage || '' %>">
+                </div>
+            </div>
+
+        </div> 
+        
+        <div class="text-center mb-5">
+            <button type="submit" class="btn btn-success btn-lg">
+                <i class="bi bi-save"></i> Save & Update Page <%= pageIndex + 1 %>
+            </button>
+        </div>
+        
+    </form>
+    <hr class="my-5">
+    <% }) %>
+
+    <div class="text-center">
+        <button class="btn btn-lg btn-outline-primary" onclick="window.location.href='/admin/about-us/new'">
+            <i class="bi bi-file-plus"></i> Create New About Us Page
+        </button>
+    </div>
+</div>
+
+
+<script>
+function renderFeatureItem(feature = {}, index) {
+    return `
+    <div class="card mb-3 feature-item" data-index="${index}"> <div class="card-body">
+            <h5 class="card-title text-primary">Feature ${index + 1}</h5>
+            <div class="row">
+                <div class="col-md-4 mb-2">
+                    <label class="form-label">Number / Icon</label>
+                    <input type="text" class="form-control" name="features[${index}].number" value="${feature.number || ''}" required>
+                </div>
+                <div class="col-md-8 mb-2">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-control" name="features[${index}].title" value="${feature.title || ''}" required>
+                </div>
+            </div>
+            <div class="form-group mb-2">
+                <label class="form-label">Content</label>
+                <textarea class="form-control" name="features[${index}].content" rows="2" required>${feature.content || ''}</textarea>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-item" data-type="feature">
+                <i class="bi bi-trash"></i> Remove
+            </button>
+        </div>
+    </div>`;
+}
+    function renderCategoryFeatureItem(feature, index) {
+    return `
+        <div class="card mb-3 category-feature-item" data-index="${index}">
+            <div class="card-body">
+                <h5 class="card-title text-secondary">Category Feature #${index + 1}</h5>
+                <div class="form-group mb-2">
+                    <label class="form-label">Icon Class (e.g., bi-lightbulb)</label>
+                    <input type="text" class="form-control" name="categoriesSection.features[${index}].icon" value="${feature.icon || ''}">
+                </div>
+                <div class="form-group mb-2">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-control" name="categoriesSection.features[${index}].title" value="${feature.title || ''}" required>
+                </div>
+                <div class="form-group mb-2">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" name="categoriesSection.features[${index}].description" rows="2" required>${feature.description || ''}</textarea>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-item" data-type="categoryFeature"><i class="bi bi-trash"></i> Remove</button>
+            </div>
+        </div>
+    `;
+}
+    
+    // 2. StepSchema (Cho How It Works)
+    function renderStepItem(step, index) {
+    return `
+        <div class="card mb-3 step-item" data-index="${index}">
+            <div class="card-body">
+                <h5 class="card-title text-info">Step #${index + 1}</h5>
+                <div class="form-group mb-2">
+                    <label class="form-label">Icon Class (e.g., bi-clock)</label>
+                    <input type="text" class="form-control" name="howItWorksSection.steps[${index}].icon" value="${step.icon || ''}">
+                </div>
+                <div class="form-group mb-2">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-control" name="howItWorksSection.steps[${index}].title" value="${step.title || ''}" required>
+                </div>
+                <div class="form-group mb-2">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" name="howItWorksSection.steps[${index}].description" rows="2" required>${step.description || ''}</textarea>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-item" data-type="step"><i class="bi bi-trash"></i> Remove</button>
+            </div>
+        </div>
+    `;
+}
+
+function addItem(type, containerId, pageIndex) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const max = Number(container.dataset.max || 3);
+  const items = container.querySelectorAll(`[data-index]`);
+  const index = items.length;
+
+  if (index >= max) return;
+
+  let html = '';
+
+  switch (type) {
+    case 'feature':
+      html = renderFeatureItem({}, index);
+      break;
+
+    case 'step':
+      html = renderStepItem({}, index);
+      break;
+
+    case 'categoryFeature':
+      html = renderCategoryFeatureItem({}, index);
+      break;
+
+    default:
+      console.warn('Unknown addItem type:', type);
+      return;
+  }
+
+  container.insertAdjacentHTML('beforeend', html);
+  updateAddButtonVisibility(containerId);
+}
+
+
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest('.remove-item');
+  if (!btn) return;
+
+  const item = btn.closest('[data-index]');
+  const container = item.parentElement;
+  item.remove();
+  reIndex(container);
+  updateAddButtonVisibility(container.id);
+});
+
+
+function reIndex(container) {
+  const items = container.querySelectorAll('[data-index]');
+  items.forEach((item, i) => {
+    item.dataset.index = i;
+
+    item.querySelectorAll('[name]').forEach(input => {
+      input.name = input.name.replace(/\[\d+\]/, `[${i}]`);
+    });
+
+    const title = item.querySelector('.card-title, .card-subtitle');
+    if (title) {
+      title.innerText = title.innerText.replace(/#\d+/, `#${i + 1}`);
+    }
+  });
+}
+
+/* ===========================
+   ẨN / HIỆN NÚT ADD
+=========================== */
+function updateAddButtonVisibility(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const max = Number(container.dataset.max || 3);
+  const count = container.querySelectorAll('[data-index]').length;
+
+  const addBtn = document.querySelector(
+    `.add-item-btn[data-container="${containerId}"]`
+  );
+
+  if (!addBtn) return;
+
+  addBtn.style.display = count >= max ? 'none' : 'inline-block';
+}
+
+/* ===========================
+   INIT KHI LOAD TRANG
+=========================== */
+document.addEventListener('DOMContentLoaded', () => {
+  document
+    .querySelectorAll('.add-item-btn')
+    .forEach(btn => updateAddButtonVisibility(btn.dataset.container));
+});
+
+</script>

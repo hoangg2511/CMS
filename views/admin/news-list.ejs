@@ -1,0 +1,84 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3 class="mb-0">News & Events</h3>
+
+  <a href="/admin/news/create" class="btn btn-primary">
+    <i class="bi bi-plus-circle me-1"></i> Create New
+  </a>
+</div>
+
+<% if (typeof error !== 'undefined') { %>
+<div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<div class="table-responsive">
+  <table class="table table-bordered table-hover align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>Image</th>
+        <th>Title</th>
+        <th>Category</th>
+        <th>Status</th>
+        <th>Views</th>
+        <th>Date</th>
+        <th width="120">Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% if (data && data.length > 0) { %> <% data.forEach(function(news) { %>
+      <tr>
+        <td>
+          <img
+            src="/uploads/<%= news.basicInfo.featuredImage %>"
+            width="80"
+            height="60"
+            class="object-fit-cover rounded"
+          />
+        </td>
+
+        <td><%= news.basicInfo.title %></td>
+
+        <td>
+          <span class="badge bg-info text-dark">
+            <%= news.categorization.category %>
+          </span>
+        </td>
+
+        <td>
+          <% if (news.status === 'published') { %>
+          <span class="badge bg-success">Published</span>
+          <% } else if (news.status === 'draft') { %>
+          <span class="badge bg-warning text-dark">Draft</span>
+          <% } else { %>
+          <span class="badge bg-secondary">Archived</span>
+          <% } %>
+        </td>
+
+        <td><%= news.views %></td>
+
+        <td><%= news.publishDate %></td>
+
+        <td>
+          <a
+            href="/admin/news/edit/<%= news._id %>"
+            class="btn btn-sm btn-warning"
+          >
+            <i class="bi bi-pencil"></i>
+          </a>
+
+          <button
+            class="btn btn-sm btn-danger"
+            onclick="deleteNews('<%= news._id %>')"
+          >
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+      <% }) %> <% } else { %>
+      <tr>
+        <td colspan="7" class="text-center text-muted">No news found</td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>

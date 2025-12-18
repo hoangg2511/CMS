@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= pageTitle || 'LAMS CMS Dashboard' %> | LAMS Admin</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+
+    <link rel="stylesheet" href="/css/admin.css" />
+  </head>
+
+  <body>
+    <div id="wrapper">
+      <%- include('../partials/sidebar') %>
+
+      <div id="main-content-wrapper">
+        <header id="admin-header"><%- include('../partials/header') %></header>
+
+        <main class="container-fluid pt-4 px-4" id="main-content">
+          <%- body %>
+        </main>
+
+        <footer class="bg-light border-top mt-auto p-3 text-center">
+          <div class="text-muted">Bản quyền &copy; LAMS CMS 2025</div>
+        </footer>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="/js/admin.js"></script>
+  </body>
+</html>
