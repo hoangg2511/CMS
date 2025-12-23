@@ -17,7 +17,7 @@ class HomePageController {
 
   async getHomepage(req, res) {
     try {
-      const result = await homePageService.getPublishedHomepage();
+      const result = await homePageService.getHomepage();
 
       return res.status(200).json({
         success: true,
@@ -34,16 +34,16 @@ class HomePageController {
 
   async getAdminHomepage(req, res) {
     try {
-      const result = await homePageService.getHomepage();
+      const result = await homePageService.getHomepageForAdmin();
 
       const homepage = result?.data;
 
       return res.render("admin/homepage", {
         pageTitle: "Homepage Management",
-        homepage: homepage || {}, // nếu chưa có document, dùng object rỗng
+        homepage: homepage || {},
+        isDraft: result.isDraft,
       });
     } catch (error) {
-      console.error("Lỗi khi tải trang chủ admin:", error);
       return res.status(500).render("admin/error", {
         pageTitle: "Lỗi",
         message: "Không thể tải dữ liệu Trang chủ: " + error.message,
@@ -66,7 +66,6 @@ class HomePageController {
 
         lastModified: new Date(),
       };
-
       const result = await homePageService.updateHomepage(homepageData);
 
       if (!result.success) {

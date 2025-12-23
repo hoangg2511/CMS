@@ -37,75 +37,28 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   });
-
-  //   formHomePage.addEventListener("submit", async (e) => {
-  //     e.preventDefault();
-  //     await submitHomepage();
-  //   });
 });
+function handleToggleStatus(checkbox) {
+  const statusLabel = document.getElementById("statusLabel");
+  const statusHidden = document.getElementById("statusHidden");
 
-function deleteNews(id) {
-  if (!id) {
-    alert("Invalid news ID");
-    return;
+  // Xác định giá trị dựa trên trạng thái check
+  const newStatus = checkbox.checked ? "published" : "draft";
+
+  // 1. Cập nhật nhãn hiển thị bên cạnh switch
+  statusLabel.innerText = checkbox.checked ? "Published" : "Draft";
+
+  // 2. Cập nhật hidden input (nếu dùng form submit truyền thống)
+  if (statusHidden) {
+    statusHidden.value = newStatus;
   }
 
-  if (!confirm("Are you sure you want to delete this news?")) {
-    return;
+  // 3. Gọi hàm cập nhật dữ liệu hiện tại của bạn
+  console.log("Trạng thái mới:", newStatus);
+  if (typeof updateStatusHomePage === "function") {
+    updateStatusHomePage(newStatus);
   }
-
-  $.ajax({
-    url: "/admin/news/delete/" + id,
-    type: "DELETE",
-    success: function (res) {
-      if (res.success) {
-        alert("Deleted successfully");
-        location.reload();
-      } else {
-        alert(res.message || "Delete failed");
-      }
-    },
-    error: function (xhr) {
-      alert(xhr.responseJSON?.message || "Server error, please try again");
-    },
-  });
 }
-
-function saveNews(id) {
-  const form = $("#newsForm");
-
-  if (!form[0].checkValidity()) {
-    form[0].reportValidity();
-    return;
-  }
-  let data = form.serializeArray();
-
-  const featured = $("input[name='featured']").is(":checked");
-
-  data.push({
-    name: "featured",
-    value: featured,
-  });
-  const url = id ? `/admin/news/update/${id}` : `/admin/news/create`;
-  const method = id ? "PUT" : "POST";
-  $.ajax({
-    url,
-    type: method,
-    data: $.param(data),
-    success(res) {
-      if (res.success) {
-        alert("Save news successfully!");
-        window.location.href = "/admin/news";
-      } else {
-        alert(res.message || "Save failed");
-      }
-    },
-    error(xhr) {
-      alert(xhr.responseJSON?.message || "Server error");
-    },
-  });
-}
-
 async function uploadSingleImage({
   fileInputId,
   previewImageId,
@@ -258,25 +211,10 @@ function uploadFeatureImage() {
   });
 }
 
-async function updateStatusHomePage(newStatus) {
-  // 1. Tìm ID của bản ghi (nên đặt một input hidden chứa ID trong form)
-  const homepageId = document.querySelector('[name="_id"]')?.value;
-
+async function submitPublish() {
   // 2. Xác nhận với người dùng
-  const confirmMsg =
-    newStatus === "published"
-      ? "Bạn có chắc chắn muốn CÔNG KHAI trang chủ này?"
-      : "Bạn muốn chuyển trang chủ về bản NHÁP?";
-
-  if (!confirm(confirmMsg)) {
-    location.reload(); // Reset lại dropdown nếu hủy
-    return;
-  }
 
   try {
-    // Hiển thị trạng thái đang xử lý (nếu cần)
-    console.log(`Đang cập nhật trạng thái sang: ${newStatus}`);
-
     const res = await fetch("/admin/homepage/publish", {
       method: "POST",
     });
@@ -296,7 +234,7 @@ async function updateStatusHomePage(newStatus) {
   }
 }
 
-async function submitHomepage(event) {
+async function updateHomePage(event) {
   if (event) event.preventDefault();
   console.log("Submit form started...");
 
@@ -438,28 +376,17 @@ async function submitHomepage(event) {
   }
 }
 
-async function submitAboutUs(pageIndex, event) {
-  if (event) event.preventDefault();
-
-  // 1. Lấy form và kiểm tra
-  const form = document.getElementById(`aboutUsForm-${pageIndex}`);
-  if (!form) {
-    console.error("Không tìm thấy form với ID:", `aboutUsForm-${pageIndex}`);
-    return;
-  }
-
+async function updateAboutUs(event) {
+  event.preventDefault();
+  const form = event.target;
   const submitBtn = form.querySelector('button[type="submit"]');
 
   try {
-    // Vô hiệu hóa nút và hiển thị loading
     submitBtn.disabled = true;
-    const originalBtnContent = submitBtn.innerHTML;
     submitBtn.innerHTML =
       '<span class="spinner-border spinner-border-sm"></span> Saving...';
 
-    console.log("Đang xử lý dữ liệu cho Page Index:", pageIndex);
-
-    // --- Thu thập dữ liệu (Giữ nguyên logic của bạn nhưng bọc trong try để bắt lỗi querySelector) ---
+    /* ===== INTRO ===== */
     const introSection = {
       label:
         form.querySelector('[name="introSection.label"]')?.value.trim() || "",
@@ -469,22 +396,28 @@ async function submitAboutUs(pageIndex, event) {
         form.querySelector('[name="introSection.content"]')?.value.trim() || "",
     };
 
+    /* ===== FEATURES ===== */
     const features = [];
-    form.querySelectorAll(".feature-item").forEach((item, index) => {
+    form.querySelectorAll(".feature-item").forEach((item) => {
       const number =
         item
-          .querySelector(`[name="features[${index}].number"]`)
+          .querySelector('[name^="features"][name$=".number"]')
           ?.value.trim() || "";
       const title =
-        item.querySelector(`[name="features[${index}].title"]`)?.value.trim() ||
-        "";
+        item
+          .querySelector('[name^="features"][name$=".title"]')
+          ?.value.trim() || "";
       const content =
         item
-          .querySelector(`[name="features[${index}].content"]`)
+          .querySelector('[name^="features"][name$=".content"]')
           ?.value.trim() || "";
-      if (number || title || content) features.push({ number, title, content });
+
+      if (number || title || content) {
+        features.push({ number, title, content });
+      }
     });
 
+    /* ===== QUOTE ===== */
     const quoteBanner = {
       quoteText:
         form.querySelector('[name="quoteBanner.quoteText"]')?.value.trim() ||
@@ -497,6 +430,7 @@ async function submitAboutUs(pageIndex, event) {
           ?.value.trim() || "",
     };
 
+    /* ===== VARIETY OPTIONS ===== */
     const varietyOptionsSection = {
       label:
         form
@@ -522,13 +456,16 @@ async function submitAboutUs(pageIndex, event) {
             ?.value.trim() || "",
       },
     };
+
     form
       .querySelectorAll('[name^="varietyOptionsSection.images"]')
       .forEach((input) => {
-        if (input.value)
-          varietyOptionsSection.images.push({ image: input.value });
+        if (input.value.trim()) {
+          varietyOptionsSection.images.push({ image: input.value.trim() });
+        }
       });
 
+    /* ===== HOW IT WORKS ===== */
     const howItWorksSection = {
       label:
         form.querySelector('[name="howItWorksSection.label"]')?.value.trim() ||
@@ -541,51 +478,60 @@ async function submitAboutUs(pageIndex, event) {
         "",
       steps: [],
     };
-    form.querySelectorAll(".step-item").forEach((item, index) => {
-      const title =
-        item
-          .querySelector(`[name="howItWorksSection.steps[${index}].title"]`)
-          ?.value.trim() || "";
-      const content =
-        item
-          .querySelector(`[name="howItWorksSection.steps[${index}].content"]`)
-          ?.value.trim() || "";
-      const icon =
-        item
-          .querySelector(`[name="howItWorksSection.steps[${index}].icon"]`)
-          ?.value.trim() || "";
-      if (title || content || icon)
-        howItWorksSection.steps.push({ title, content, icon });
-    });
 
-    const categoriesSection = {
-      features: [],
-      images: [],
-    };
-    form.querySelectorAll(".category-feature-item").forEach((item, index) => {
+    form.querySelectorAll(".step-item").forEach((item) => {
       const icon =
         item
-          .querySelector(`[name="categoriesSection.features[${index}].icon"]`)
+          .querySelector('[name^="howItWorksSection.steps"][name$=".icon"]')
           ?.value.trim() || "";
       const title =
         item
-          .querySelector(`[name="categoriesSection.features[${index}].title"]`)
+          .querySelector('[name^="howItWorksSection.steps"][name$=".title"]')
           ?.value.trim() || "";
       const description =
         item
           .querySelector(
-            `[name="categoriesSection.features[${index}].description"]`
+            '[name^="howItWorksSection.steps"][name$=".description"]'
           )
           ?.value.trim() || "";
-      if (icon || title || description)
-        categoriesSection.features.push({ icon, title, description });
+
+      if (icon || title || description) {
+        howItWorksSection.steps.push({ icon, title, description });
+      }
     });
+
+    /* ===== CATEGORIES ===== */
+    const categoriesSection = { features: [], images: [] };
+
+    form.querySelectorAll(".category-feature-item").forEach((item) => {
+      const icon =
+        item
+          .querySelector('[name^="categoriesSection.features"][name$=".icon"]')
+          ?.value.trim() || "";
+      const title =
+        item
+          .querySelector('[name^="categoriesSection.features"][name$=".title"]')
+          ?.value.trim() || "";
+      const description =
+        item
+          .querySelector(
+            '[name^="categoriesSection.features"][name$=".description"]'
+          )
+          ?.value.trim() || "";
+
+      if (icon || title || description) {
+        categoriesSection.features.push({ icon, title, description });
+      }
+    });
+
     form
       .querySelectorAll('[name^="categoriesSection.images"]')
       .forEach((input) => {
-        if (input.value) categoriesSection.images.push(input.value);
+        if (input.value.trim())
+          categoriesSection.images.push(input.value.trim());
       });
 
+    /* ===== SUBSCRIBE ===== */
     const subscribeSection = {
       title:
         form.querySelector('[name="subscribeSection.title"]')?.value.trim() ||
@@ -596,6 +542,7 @@ async function submitAboutUs(pageIndex, event) {
           ?.value.trim() || "",
     };
 
+    /* ===== SEO ===== */
     const seo = {
       metaTitle:
         form.querySelector('[name="seo.metaTitle"]')?.value.trim() || "",
@@ -605,12 +552,9 @@ async function submitAboutUs(pageIndex, event) {
         form.querySelector('[name="seo.metaKeywords"]')?.value.trim() || "",
       ogImage: form.querySelector('[name="seo.ogImage"]')?.value.trim() || "",
     };
-    form.querySelectorAll(".keyword-item input").forEach((input) => {
-      if (input.value.trim()) seo.metaKeywords.push(input.value.trim());
-    });
 
+    /* ===== PAYLOAD ===== */
     const payload = {
-      _id: form.querySelector('[name="_id"]')?.value || null,
       status: form.querySelector('[name="status"]')?.value || "draft",
       introSection,
       features,
@@ -622,43 +566,30 @@ async function submitAboutUs(pageIndex, event) {
       seo,
     };
 
-    // 2. Gửi dữ liệu
-    const response = await fetch("/admin/about/update", {
+    console.log("Payload:", payload);
+
+    const response = await fetch(form.action, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
-    // Kiểm tra lỗi HTTP (ví dụ 404, 500)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
     const result = await response.json();
-
-    // 3. Xử lý kết quả trả về từ Server
     if (result.success) {
-      console.log("Update Success:", result.success);
-      alert("About Us updated successfully!:", result.message);
-      location.reload(); // Hoặc chuyển hướng nếu cần
+      alert("Update AboutUs Success!");
+      location.reload();
     } else {
-      // Lỗi nghiệp vụ từ Server (ví dụ thiếu trường bắt buộc)
-      throw new Error(result.message || "Update failed from server");
+      alert("Failed " + (result.message || "Uncertain Error"));
     }
   } catch (err) {
-    // --- Bắt toàn bộ lỗi tại đây ---
-    console.error("Error during submission:", err);
-    alert("Error: " + err.message);
-
-    // Khôi phục lại nút bấm để người dùng sửa lỗi và thử lại
+    console.error(err);
+    alert(err.message);
     submitBtn.disabled = false;
-    submitBtn.innerHTML = `<i class="bi bi-save"></i> Save & Update Page ${
-      pageIndex + 1
-    }`;
+    submitBtn.innerHTML = `<i class="bi bi-save"></i> Save`;
   }
 }
 
-async function submitContactForm(event) {
+async function updateContactForm(event) {
   event.preventDefault();
   const form = event.target;
 

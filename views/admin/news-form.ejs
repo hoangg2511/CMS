@@ -6,17 +6,17 @@
       <i class="bi bi-arrow-left"></i> Back
     </a>
 
- <button
+<button
   class="btn btn-primary"
   data-id="<%= news ? news._id : '' %>"
-  onclick="saveNews(this.dataset.id)">
+  onclick="handleSaveNews(this)">
   <i class="bi bi-save"></i> Save
 </button>
   </div>
 </div>
 
 
-<form id="newsForm">
+<form id="FormData">
   <div class="row">
     <div class="col-md-8">
 <div class="card mb-4">
@@ -58,6 +58,32 @@
 </div>
 
 <div class="card">
+  <div class="card-header fw-bold">Author</div>
+  <div class="card-body">
+
+    <div class="mb-3">
+      <label class="form-label">Author Name</label>
+      <input
+        type="text"
+        class="form-control"
+        name="authorName"
+        required
+        value="<%= news && news.author ? news.author.name : '' %>"
+      />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Email Author</label>
+      <textarea
+        class="form-control"
+        name="authorEmail"
+        required
+      ><%= news && news.author ? news.author.email : '' %></textarea>
+    </div>
+
+  </div>
+</div>
+<div class="card ">
   <div class="card-header fw-bold">SEO Settings</div>
   <div class="card-body">
 
@@ -78,10 +104,10 @@
         name="metaDescription"
       ><%= news && news.seo ? news.seo.metaDescription : '' %></textarea>
     </div>
+    
 
   </div>
 </div>
-
     </div>
     <div class="col-md-4">
 <div class="card mb-4">
@@ -134,6 +160,7 @@
       <select class="form-select" name="category">
         <% ['news','event','story','announcement'].forEach(function(c) { %>
           <option
+           name ="tags"
             value="<%= c %>"
             <%= news && news.categorization && news.categorization.category === c ? 'selected' : '' %>
           >
@@ -185,3 +212,5 @@
     </div>
   </div>
 </form>
+
+<script src="/js/news.js"></script>

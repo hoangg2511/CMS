@@ -20,16 +20,29 @@ async function createItem(model, data) {
 
 async function updateItem(model, updateData, filter = null, options = {}) {
   let updatedDoc;
+
   if (filter && filter._id) {
-    updatedDoc = await model.findByIdAndUpdate(filter._id, updateData, {
-      new: true,
-      ...options,
-    });
+    // Update theo ID
+    updatedDoc = await model.findByIdAndUpdate(
+      filter._id,
+      { $set: updateData },
+      {
+        new: true,
+        runValidators: true,
+        ...options,
+      }
+    );
   } else {
-    updatedDoc = await model.findOneAndUpdate({}, updateData, {
-      new: true,
-      ...options,
-    });
+    // Update document đầu tiên tìm được
+    updatedDoc = await model.findOneAndUpdate(
+      {},
+      { $set: updateData },
+      {
+        new: true,
+        runValidators: true,
+        ...options,
+      }
+    );
   }
 
   if (!updatedDoc) throw new Error("Document not found");

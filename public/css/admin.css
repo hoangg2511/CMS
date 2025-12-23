@@ -21,3 +21,57 @@
 #main-content {
   flex-grow: 1;
 }
+/* 
+.checkbox {
+  opacity: 0;
+  position: absolute;
+  display: none !important;
+}
+
+.checkbox-label {
+  background-color: #d10000;
+  width: 50px;
+  height: 26px;
+  border-radius: 50px;
+  position: relative;
+  padding: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fa-moon {
+  color: #f1c40f;
+}
+.fa-sun {
+  color: #f39c12;
+}
+.checkbox-label .ball {
+  background-color: #fff;
+  width: 22px;
+  height: 22px;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  border-radius: 50%;
+  transition: transform 0.3s linear;
+}
+.checkbox:checked + .checkbox-label .ball {
+  transform: translateX(24px);
+}
+#checkbox {
+  display: none;
+} */
+
+/* Viền đỏ cho các ô bị thiếu */
+.is-invalid {
+  border: 2px solid #dc3545 !important;
+  background-color: #fff8f8;
+}
+
+/* Thêm dấu sao đỏ cho các label của trường required */
+label.required::after {
+  content: " *";
+  color: red;
+  font-weight: bold;
+}

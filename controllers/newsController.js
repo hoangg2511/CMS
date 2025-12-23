@@ -2,12 +2,6 @@ const { NewsEventService } = require("../models/NewsEvent");
 
 const newsService = new NewsEventService();
 class NewsController {
-  async news(req, res) {
-    res.render("admin/news-list", {
-      pageTitle: "News",
-    });
-  }
-
   async getNewsList(req, res) {
     try {
       const { page = req.page, limit = req.limit, category = null } = req.query;
@@ -133,32 +127,7 @@ class NewsController {
     try {
       const { id } = req.params;
       const body = req.body;
-
-      const updateData = {
-        basicInfo: {
-          title: body.title,
-          slug: body.title,
-          teaser: body.teaser,
-          content: body.content,
-          featuredImage: body.image,
-        },
-
-        categorization: {
-          category: body.category,
-        },
-
-        seo: {
-          metaTitle: body.metaTitle,
-          metaDescription: body.metaDescription,
-        },
-
-        status: body.status,
-        publishDate: body.publishDate || new Date(),
-        featured: body.featured === "on",
-      };
-
-      const result = await newsService.updateNews(id, updateData);
-
+      const result = await newsService.updateNews(id, body);
       if (!result.success) {
         return res.status(400).json(result);
       }

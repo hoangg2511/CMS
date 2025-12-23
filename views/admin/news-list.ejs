@@ -9,7 +9,10 @@
 <% if (typeof error !== 'undefined') { %>
 <div class="alert alert-danger"><%= error %></div>
 <% } %>
-
+<script>
+  window.newsList = <%- JSON.stringify(data || []) %>;
+   localStorage.setItem('newsList', JSON.stringify(window.newsList));
+</script>
 <div class="table-responsive">
   <table class="table table-bordered table-hover align-middle">
     <thead class="table-light">
@@ -82,3 +85,5 @@
     </tbody>
   </table>
 </div>
+
+<script src="/js/news.js"></script>

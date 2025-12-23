@@ -109,7 +109,7 @@ class AboutUsService {
 
   async getAdminAbout() {
     try {
-      const result = await readItems(this.model);
+      const result = await readItem(this.model);
       return {
         success: true,
         data: result,
@@ -120,9 +120,9 @@ class AboutUsService {
     }
   }
 
-  async updateAbout(data, id) {
+  async updateAbout(data, id = null) {
     try {
-      const filter = { _id: id };
+      const filter = id ? { _id: id } : {};
       const result = await updateItem(this.model, data, filter, { new: true });
       return { success: true, data: result, message: "Update successful" };
     } catch (error) {

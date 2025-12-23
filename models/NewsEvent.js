@@ -9,8 +9,7 @@ const {
 } = require("../config/database");
 const { Schema } = mongoose;
 
-const slug = require("slug");
-
+const slugger = require("slug").default;
 const NewsEventSchema = new Schema(
   {
     basicInfo: {
@@ -75,26 +74,23 @@ const NewsEventSchema = new Schema(
     timestamps: true,
   }
 );
-NewsEventSchema.pre("save", function (next) {
-  if (this.isModified("basicInfo.title") || this.isNew) {
-    let rawSlug = slug(this.basicInfo.title, {
-      lower: true,
-      strict: false,
-      locale: "en",
-    });
-    this.basicInfo.slug = rawSlug
-      .replace(/[^a-z0-9-]/g, "")
-      .replace(/-+/g, "-");
-  }
-  next();
-});
-
 const NewsEventModel =
   mongoose.models.NewsEvent || mongoose.model("NewsEvent", NewsEventSchema);
 
 class NewsEventService {
   constructor(model = NewsEventModel) {
     this.model = model;
+  }
+  slugify(title) {
+    if (!title) return "";
+
+    console.log(typeof slugger);
+    return slugger(title, {
+      replacement: "-",
+      lower: true,
+      strict: true,
+      locale: "en",
+    });
   }
 
   async getNews(id) {
@@ -184,6 +180,8 @@ class NewsEventService {
 
   async createNews(data) {
     try {
+      const generatedSlug = this.slugify(data.basicInfo.title);
+      data.basicInfo.slug = generatedSlug;
       const result = await createItem(this.model, data);
       return {
         success: true,
@@ -197,6 +195,8 @@ class NewsEventService {
 
   async updateNews(id, data) {
     try {
+      const generatedSlug = this.slugify(data.basicInfo.title);
+      data.basicInfo.slug = generatedSlug;
       const result = await updateItem(this.model, data, { _id: id });
       return {
         success: true,

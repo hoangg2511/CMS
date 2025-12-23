@@ -2,12 +2,6 @@ const { AboutUsService } = require("../models/AboutUs");
 const aboutUsService = new AboutUsService();
 
 class AboutController {
-  async about(req, res) {
-    res.render("admin/about", {
-      pageTitle: "About Us",
-    });
-  }
-
   async getAboutUs(req, res) {
     try {
       const result = await aboutUsService.getAbout();
@@ -29,33 +23,30 @@ class AboutController {
       const result = await aboutUsService.getAdminAbout();
 
       return res.render("admin/about", {
-        pageTitle: "Quản lý Trang Về Chúng Tôi",
-        aboutUsPages: result.data,
+        pageTitle: "About Us Management",
+        aboutUs: result.data,
       });
     } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu About Us:", error.message);
+      console.error("Fetch data Error: ", error.message);
       return res.redirect("/admin/dashboard");
     }
   }
   async updateAboutUs(req, res) {
-    console.log("Dữ liệu nhận được tại Backend:", req.body);
     try {
       const data = req.body;
-      const id = data._id;
-      console.log("ID nhận được để cập nhật:", id);
-      if (!id) {
+      const result = await aboutUsService.updateAbout(data);
+      if (!result.success) {
         return res.status(400).json({
           success: false,
-          message: "Form Invalid ID",
+          message: result.message || "Update failed",
+        });
+      } else {
+        return res.status(200).json({
+          success: true,
+          data: result,
+          message: result.message || "About Us updated successfully",
         });
       }
-
-      const result = await aboutUsService.updateAbout(data, id);
-      return res.status(200).json({
-        success: true,
-        data: result,
-        message: result.message || "About Us updated successfully",
-      });
     } catch (error) {
       console.error("Update AboutUs Error:", error);
       return res.status(500).json({

@@ -4,6 +4,7 @@ const expressLayouts = require("express-ejs-layouts");
 const session = require("express-session");
 const cors = require("cors");
 require("dotenv").config();
+require("./config/redis");
 
 const app = express();
 
